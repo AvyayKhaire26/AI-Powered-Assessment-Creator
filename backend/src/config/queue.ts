@@ -1,16 +1,23 @@
 import { Queue } from "bullmq";
+import { env } from "./env";
 
-const redisPort = process.env.REDIS_PORT
-  ? parseInt(process.env.REDIS_PORT, 10)
-  : 6379;
+const sharedConnection = {
+  url: env.REDIS_URL,
+  maxRetriesPerRequest: null,
+  enableReadyCheck: false,
+  tls: env.REDIS_TLS ? {} : undefined,
+  lazyConnect: true,
+  keepAlive: 10000,
+};
 
-if (isNaN(redisPort)) {
-  throw new Error("REDIS_PORT is invalid");
-}
+export { sharedConnection };
 
-export const assignmentQueue = new Queue("assignment-queue", {
-  connection: {
-    host: process.env.REDIS_HOST || "localhost",
-    port: redisPort,
+export const assignmentQueue = new Queue("assignment-generation", {
+  connection: sharedConnection,
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: { type: "exponential", delay: 3000 },
+    removeOnComplete: { count: 50 },
+    removeOnFail: { count: 100 },
   },
 });
