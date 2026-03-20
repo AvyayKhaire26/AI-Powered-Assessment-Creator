@@ -1,0 +1,25 @@
+import { Router } from "express";
+import { AssignmentController } from "../controllers/assignment.controller";
+import { AssignmentService } from "../services/assignment.service";
+import { AssignmentRepository } from "../repositories/assignment.repository";
+import { authMiddleware } from "../middlewares/auth.middleware";
+import { handleUpload } from "../middlewares/upload.handler";
+
+const router = Router();
+
+// DI wiring
+const repository = new AssignmentRepository();
+const service = new AssignmentService(repository);
+const controller = new AssignmentController(service);
+
+router.use(authMiddleware);
+
+router.post("/", (req, res, next) => controller.create(req, res, next));
+router.get("/", (req, res, next) => controller.getAll(req, res, next));
+router.get("/:id", (req, res, next) => controller.getById(req, res, next));
+router.delete("/:id", (req, res, next) => controller.delete(req, res, next));
+router.post("/:id/regenerate", (req, res, next) => controller.regenerate(req, res, next));
+router.post("/:id/pdf", (req, res, next) => controller.requestPdf(req, res, next));
+router.post("/", handleUpload, (req, res, next) => controller.create(req, res, next));
+
+export default router;
