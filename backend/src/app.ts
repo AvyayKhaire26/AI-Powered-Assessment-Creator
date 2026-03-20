@@ -13,6 +13,7 @@ import "./workers/generation.worker";
 import "./workers/pdf.worker";
 import { Request, Response, NextFunction } from "express";
 import { ApiResponse } from "./utils/response.util";
+import { rateLimitMiddleware } from "./middlewares/rateLimit.middleware";
 import path from "path";
 
 const app: Application = express();
@@ -21,6 +22,12 @@ const httpServer = createServer(app);
 app.use(helmet());
 app.use(cors({ origin: env.CLIENT_URL }));
 app.use(morgan("dev"));
+app.use(rateLimitMiddleware({
+  capacity: 20,       // max 20 requests stored
+  refillRate: 10,     // refill 10 tokens
+  windowSecs: 60,     // every 60 seconds
+}));
+
 app.use(express.json());
 
 app.get("/health", (_, res) => res.json({ status: "ok" }));
