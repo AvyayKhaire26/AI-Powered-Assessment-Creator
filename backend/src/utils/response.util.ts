@@ -23,10 +23,11 @@ export class ApiResponse {
         });
     }
 
-    static badRequest(res: Response, message: string): Response {
+    static badRequest(res: Response, message: string | object): Response {
         return res.status(StatusCodes.BAD_REQUEST).json({
             success: false,
-            message,
+            message: typeof message === "string" ? message : undefined,
+            errors: typeof message === "object" ? message : undefined,
         });
     }
 
