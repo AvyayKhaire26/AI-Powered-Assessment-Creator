@@ -1,17 +1,11 @@
 import mongoose from "mongoose";
+import { env } from "./env";
 import { logger } from "../utils/logger";
 
-export const connectDB = async () => {
+export const connectDB = async (): Promise<void> => {
   try {
-    if (!process.env.MONGO_URI) {
-      throw new Error("MONGO_URI is not defined");
-    }
-
-    const conn = await mongoose.connect(process.env.MONGO_URI, {
-      family: 4, // 🔥 IMPORTANT FIX
-    });
-
-    logger.info(`MongoDB Connected: ${conn.connection.host}`);
+    const conn = await mongoose.connect(env.MONGO_URI, { family: 4 });
+    logger.info(`MongoDB connected: ${conn.connection.host}`);
   } catch (error) {
     logger.error("MongoDB connection failed", error);
     process.exit(1);
