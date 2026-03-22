@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useAssignmentStore } from "@/store/useAssignmentStore";
 import AppLayout from "@/components/layout/AppLayout";
 import { CreateAssignmentDTO, QuestionTypeInput } from "@/types";
+import styles from "@/styles/createAssignment.module.css";
 
 const QUESTION_TYPES = [
   "Multiple Choice Questions",
@@ -47,16 +48,15 @@ export default function CreatePage() {
 
   const handleNext = () => { if (validate()) setStep(2); };
 
-const handleSubmit = async () => {
-  clearError();
-  try {
-    const assignment = await create(form);
-    // Redirect immediately — socket on [id] page handles updates
-    router.push(`/assignments/${assignment._id}`);
-  } catch {
-    // error already set in store
-  }
-};
+  const handleSubmit = async () => {
+    clearError();
+    try {
+      const assignment = await create(form);
+      router.push(`/assignments/${assignment._id}`);
+    } catch {
+      // error already set in store
+    }
+  };
 
   const updateQT = (i: number, field: keyof QuestionTypeInput, val: string | number) =>
     setForm((f) => ({ ...f, questionTypes: f.questionTypes.map((q, idx) => idx === i ? { ...q, [field]: val } : q) }));
@@ -71,123 +71,166 @@ const handleSubmit = async () => {
 
   return (
     <AppLayout title="Assignment" showBack>
-      <div className="max-w-2xl mx-auto p-6">
-        {/* Header */}
-        <div className="mb-4">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="w-2 h-2 rounded-full bg-green-500" />
-            <h1 className="font-bold text-[var(--color-text-primary)]">Create Assignment</h1>
+      <div className={styles.wrapper}>
+
+        {/* ── HEADER ── */}
+        <div className={styles.header}>
+          <div className={styles.headerTop}>
+            <div className={styles.greenDotWrap}>
+              <span className={styles.greenDotOuter} />
+              <span className={styles.greenDotInner} />
+            </div>
+            <h1 className={styles.title}>Create Assignment</h1>
           </div>
-          <p className="text-sm text-[var(--color-text-secondary)]">Set up a new assignment for your students</p>
+          <p className={styles.subtitle}>Set up a new assignment for your students</p>
         </div>
 
-        {/* Progress bar */}
-        <div className="h-1 bg-gray-200 rounded-full mb-6">
-          <div className={`h-1 bg-[var(--color-primary)] rounded-full transition-all duration-300 ${step === 1 ? "w-1/2" : "w-full"}`} />
+        {/* ── PROGRESS BAR ── */}
+        <div className={styles.progressBar}>
+          <div className={styles.progressFill} style={{ width: step === 1 ? "50%" : "100%" }} />
         </div>
 
         {step === 1 ? (
-          <div className="space-y-5">
-            {/* File Upload */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+
+            {/* Section heading */}
+            <div>
+              <p className={styles.sectionTitle}>Assignment Details</p>
+              <p className={styles.sectionSubtitle}>Basic information about your assignment</p>
+            </div>
+
+            {/* ── FILE UPLOAD ── */}
             <div
-              className="border-2 border-dashed border-[var(--color-border)] rounded-xl p-8 text-center bg-white cursor-pointer hover:border-[var(--color-primary)] transition-colors"
+              className={styles.uploadBox}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) setFile(f); }}
               onClick={() => document.getElementById("fileInput")?.click()}
             >
-              <svg className="w-8 h-8 mx-auto mb-2 text-[var(--color-text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="#A9A9A9" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
               </svg>
-              <p className="text-sm font-medium text-[var(--color-text-primary)]">
-                {file ? file.name : "Choose a file or drag & drop it here"}
-              </p>
-              <p className="text-xs text-[var(--color-text-secondary)] mt-1">JPEG, PNG, PDF, upto 10MB</p>
-              <button type="button" className="mt-3 px-4 py-1.5 border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text-primary)] hover:bg-gray-50">
+              <div style={{ textAlign: "center" }}>
+                <p className={styles.uploadText}>
+                  {file ? file.name : "Choose a file or drag & drop it here"}
+                </p>
+                <p className={styles.uploadSubText}>JPEG, PNG, PDF, upto 10MB</p>
+              </div>
+              <button
+                type="button"
+                className={styles.browseBtn}
+                onClick={(e) => e.stopPropagation()}
+              >
                 Browse Files
               </button>
-              <input id="fileInput" type="file" accept=".pdf,.txt,.jpg,.jpeg,.png" className="hidden"
-                onChange={(e) => { const f = e.target.files?.[0]; if (f) setFile(f); }} />
+              <input
+                id="fileInput"
+                type="file"
+                accept=".pdf,.txt,.jpg,.jpeg,.png"
+                style={{ display: "none" }}
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) setFile(f); }}
+              />
             </div>
-            <p className="text-xs text-center text-[var(--color-text-secondary)] -mt-3">Upload images of your preferred document/image</p>
+            <p style={{
+              fontFamily: "'Bricolage Grotesque', sans-serif",
+              fontSize: 12,
+              color: "rgba(94,94,94,0.8)",
+              textAlign: "center",
+              marginTop: -12,
+            }}>
+              Upload images of your preferred document/image
+            </p>
 
-            {/* Due Date */}
+            {/* ── DUE DATE ── */}
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">Due Date</label>
-              <div className="relative">
-                <input type="date"
-                  className={`w-full text-sm border rounded-xl px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] ${errors.dueDate ? "border-red-400" : "border-[var(--color-border)]"}`}
-                  value={form.dueDate}
-                  min={new Date().toISOString().split("T")[0]}
-                  onChange={(e) => setForm((f) => ({ ...f, dueDate: e.target.value }))}
-                />
-              </div>
-              {errors.dueDate && <p className="mt-1 text-xs text-red-500">{errors.dueDate}</p>}
+              <label className={styles.fieldLabel}>Due Date</label>
+              <input
+                type="date"
+                className={`${styles.inputRounded} ${errors.dueDate ? styles.inputRoundedError : ""}`}
+                value={form.dueDate}
+                min={new Date().toISOString().split("T")[0]}
+                onChange={(e) => setForm((f) => ({ ...f, dueDate: e.target.value }))}
+              />
+              {errors.dueDate && <p className={styles.errorText}>{errors.dueDate}</p>}
             </div>
 
-            {/* Title + Subject + Class */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* ── TITLE / SUBJECT / CLASS ── */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
               {[
                 { key: "title", label: "Title", placeholder: "e.g. Chapter 5 Quiz" },
                 { key: "subject", label: "Subject", placeholder: "e.g. Science" },
                 { key: "className", label: "Class", placeholder: "e.g. 8th" },
               ].map(({ key, label, placeholder }) => (
                 <div key={key}>
-                  <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">{label}</label>
+                  <label className={styles.fieldLabel}>{label}</label>
                   <input
-                    className={`w-full text-sm border rounded-xl px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] ${errors[key] ? "border-red-400" : "border-[var(--color-border)]"}`}
+                    className={`${styles.inputRounded} ${errors[key] ? styles.inputRoundedError : ""}`}
                     placeholder={placeholder}
                     value={(form as any)[key]}
                     onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
                   />
-                  {errors[key] && <p className="mt-1 text-xs text-red-500">{errors[key]}</p>}
+                  {errors[key] && <p className={styles.errorText}>{errors[key]}</p>}
                 </div>
               ))}
             </div>
 
-            {/* Question Types */}
+            {/* ── QUESTION TYPES ── */}
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium text-[var(--color-text-primary)]">Question Type</label>
-                <div className="flex gap-6 text-xs font-medium text-[var(--color-text-secondary)] pr-8">
-                  <span>No. of Questions</span>
-                  <span>Marks</span>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <label className={styles.fieldLabel} style={{ margin: 0 }}>Question Type</label>
+                <div style={{ display: "flex", gap: 24, paddingRight: 40 }}>
+                  <span style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 12, fontWeight: 500, color: "#A9A9A9", width: 100, textAlign: "center" }}>No. of Questions</span>
+                  <span style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 12, fontWeight: 500, color: "#A9A9A9", width: 100, textAlign: "center" }}>Marks</span>
                 </div>
               </div>
 
-              <div className="space-y-3">
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {form.questionTypes.map((qt, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <div className="flex-1 relative">
+                  <div key={i} className={styles.qRow}>
+
+                    {/* Select */}
+                    <div className={styles.qSelectWrap}>
                       <select
-                        className="w-full text-sm border border-[var(--color-border)] rounded-xl px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] appearance-none"
                         value={qt.type}
                         onChange={(e) => updateQT(i, "type", e.target.value)}
                       >
                         {QUESTION_TYPES.map((t) => <option key={t}>{t}</option>)}
                       </select>
-                      <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                      {/* Down chevron — 8×4, 1.5px stroke, #303030 */}
+                      <svg
+                        className={styles.qSelectChevron}
+                        width="8"
+                        height="4"
+                        viewBox="0 0 8 4"
+                        fill="none"
+                      >
+                        <path d="M1 0.5L4 3.5L7 0.5" stroke="#303030" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     </div>
 
                     {/* Count stepper */}
-                    <div className="flex items-center border border-[var(--color-border)] rounded-xl overflow-hidden bg-white">
-                      <button type="button" onClick={() => stepCount(i, "count", -1)} className="px-3 py-2 text-[var(--color-text-secondary)] hover:bg-gray-50">−</button>
-                      <span className="w-8 text-center text-sm font-medium">{qt.count}</span>
-                      <button type="button" onClick={() => stepCount(i, "count", 1)} className="px-3 py-2 text-[var(--color-text-secondary)] hover:bg-gray-50">+</button>
+                    <div className={styles.stepper}>
+                      <button type="button" className={styles.stepBtn} onClick={() => stepCount(i, "count", -1)}>−</button>
+                      <span className={styles.stepValue}>{qt.count}</span>
+                      <button type="button" className={styles.stepBtn} onClick={() => stepCount(i, "count", 1)}>+</button>
                     </div>
 
                     {/* Marks stepper */}
-                    <div className="flex items-center border border-[var(--color-border)] rounded-xl overflow-hidden bg-white">
-                      <button type="button" onClick={() => stepCount(i, "marks", -1)} className="px-3 py-2 text-[var(--color-text-secondary)] hover:bg-gray-50">−</button>
-                      <span className="w-8 text-center text-sm font-medium">{qt.marks}</span>
-                      <button type="button" onClick={() => stepCount(i, "marks", 1)} className="px-3 py-2 text-[var(--color-text-secondary)] hover:bg-gray-50">+</button>
+                    <div className={styles.stepper}>
+                      <button type="button" className={styles.stepBtn} onClick={() => stepCount(i, "marks", -1)}>−</button>
+                      <span className={styles.stepValue}>{qt.marks}</span>
+                      <button type="button" className={styles.stepBtn} onClick={() => stepCount(i, "marks", 1)}>+</button>
                     </div>
 
+                    {/* X remove button — 8×8, 1.5px stroke */}
                     {form.questionTypes.length > 1 && (
-                      <button type="button" onClick={() => removeQT(i)} className="text-[var(--color-text-secondary)] hover:text-red-500 transition-colors">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      <button
+                        type="button"
+                        className={styles.removeBtn}
+                        onClick={() => removeQT(i)}
+                        aria-label="Remove question type"
+                      >
+                        <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                          <path d="M1 1L7 7M7 1L1 7" stroke="#A9A9A9" strokeWidth="1.5" strokeLinecap="round" />
                         </svg>
                       </button>
                     )}
@@ -195,89 +238,152 @@ const handleSubmit = async () => {
                 ))}
               </div>
 
-              <button type="button" onClick={addQT}
-                className="mt-3 flex items-center gap-2 text-sm text-[var(--color-text-primary)] font-medium hover:text-[var(--color-primary)]">
-                <div className="w-6 h-6 rounded-full border-2 border-current flex items-center justify-center text-lg leading-none">+</div>
+              {/* Add Question Type */}
+              <button type="button" className={styles.addQTBtn} onClick={addQT}>
+                <span className={styles.addQTCircle}>
+                  {/* Plus icon — 20×20 white */}
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M10 4V16M4 10H16" stroke="white" strokeWidth="1.75" strokeLinecap="round" />
+                  </svg>
+                </span>
                 Add Question Type
               </button>
 
-              <div className="mt-3 flex justify-end gap-6 text-sm text-[var(--color-text-secondary)]">
-                <span>Total Questions : <strong className="text-[var(--color-text-primary)]">{totalQ}</strong></span>
-                <span>Total Marks : <strong className="text-[var(--color-text-primary)]">{totalM}</strong></span>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 24, marginTop: 12 }}>
+                <span style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 14, color: "#5E5E5E" }}>
+                  Total Questions : <strong style={{ color: "#303030" }}>{totalQ}</strong>
+                </span>
+                <span style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 14, color: "#5E5E5E" }}>
+                  Total Marks : <strong style={{ color: "#303030" }}>{totalM}</strong>
+                </span>
               </div>
             </div>
 
-            {/* Instructions */}
+            {/* ── INSTRUCTIONS ── */}
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">Additional Information (For better output)</label>
-              <textarea
-                className="w-full text-sm border border-[var(--color-border)] rounded-xl px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] resize-none"
-                rows={3}
-                placeholder="e.g Generate a question paper for 3 hour exam duration..."
-                value={form.instructions}
-                maxLength={500}
-                onChange={(e) => setForm((f) => ({ ...f, instructions: e.target.value }))}
-              />
+              <label className={styles.fieldLabel}>Additional Information (For better output)</label>
+              <div className={styles.textareaWrap}>
+                <textarea
+                  className={styles.textarea}
+                  rows={4}
+                  placeholder="e.g Generate a question paper for 3 hour exam duration..."
+                  value={form.instructions}
+                  maxLength={500}
+                  onChange={(e) => setForm((f) => ({ ...f, instructions: e.target.value }))}
+                />
+                {/* Mic button — bottom right */}
+                <button type="button" className={styles.micBtn} aria-label="Voice input">
+                  <svg
+                    width="16.36"
+                    height="16.36"
+                    viewBox="0 0 24 24"
+                    fill="#303030"
+                    stroke="none"
+                  >
+                    <path d="M12 1a4 4 0 00-4 4v7a4 4 0 008 0V5a4 4 0 00-4-4z" />
+                    <path d="M19 10a1 1 0 00-2 0 5 5 0 01-10 0 1 1 0 00-2 0 7 7 0 006 6.92V19H9a1 1 0 000 2h6a1 1 0 000-2h-2v-2.08A7 7 0 0019 10z" />
+                  </svg>
+                </button>
+
+              </div>
             </div>
+
           </div>
         ) : (
-          /* Step 2 — Summary */
-          <div className="bg-white border border-[var(--color-border)] rounded-2xl p-6 space-y-4">
-            <h2 className="font-bold text-[var(--color-text-primary)] text-lg">Review Assignment</h2>
-            <div className="grid grid-cols-2 gap-3 text-sm">
+          /* ── STEP 2 — SUMMARY ── */
+          <div className={styles.summaryCard}>
+            <h2 style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontWeight: 700, fontSize: 18, color: "#303030", margin: "0 0 16px 0" }}>
+              Review Assignment
+            </h2>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
               <SummaryRow label="Title" value={form.title} />
               <SummaryRow label="Subject" value={form.subject} />
               <SummaryRow label="Class" value={form.className} />
               <SummaryRow label="Due Date" value={new Date(form.dueDate).toLocaleDateString()} />
             </div>
-            <div>
-              <p className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wide mb-2">Question Types</p>
-              <div className="space-y-2">
-                {form.questionTypes.map((qt, i) => (
-                  <div key={i} className="flex justify-between text-sm">
-                    <span className="text-[var(--color-text-primary)]">{qt.type}</span>
-                    <span className="text-[var(--color-text-secondary)]">{qt.count} questions × {qt.marks} marks</span>
-                  </div>
-                ))}
-              </div>
+            <p style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 11, fontWeight: 600, color: "#A9A9A9", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>
+              Question Types
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
+              {form.questionTypes.map((qt, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 14 }}>
+                  <span style={{ color: "#303030" }}>{qt.type}</span>
+                  <span style={{ color: "#5E5E5E" }}>{qt.count} questions × {qt.marks} marks</span>
+                </div>
+              ))}
             </div>
-            <div className="flex justify-between text-sm font-semibold pt-2 border-t border-[var(--color-border)]">
+            <div style={{ display: "flex", justifyContent: "space-between", fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 14, fontWeight: 600, paddingTop: 12, borderTop: "1px solid #E5E5E5", marginBottom: 12 }}>
               <span>Total Questions: {totalQ}</span>
               <span>Total Marks: {totalM}</span>
             </div>
             {form.instructions && (
-              <div>
-                <p className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wide mb-1">Instructions</p>
-                <p className="text-sm text-[var(--color-text-primary)]">{form.instructions}</p>
+              <div style={{ marginBottom: 12 }}>
+                <p style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 11, fontWeight: 600, color: "#A9A9A9", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>Instructions</p>
+                <p style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 14, color: "#303030" }}>{form.instructions}</p>
               </div>
             )}
-            {file && <p className="text-sm text-[var(--color-text-secondary)]">📎 {file.name}</p>}
-            {error && <p className="text-sm text-red-500 bg-red-50 px-4 py-2 rounded-lg">{error}</p>}
+            {file && (
+              <p style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 14, color: "#5E5E5E" }}>📎 {file.name}</p>
+            )}
+            {error && (
+              <p style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 14, color: "#ef4444", background: "#fef2f2", padding: "8px 16px", borderRadius: 8, marginTop: 8 }}>
+                {error}
+              </p>
+            )}
           </div>
         )}
 
-        {/* Navigation buttons */}
-        <div className="flex justify-between mt-6">
+        {/* ── NAV BUTTONS ── */}
+        <div className={styles.navRow}>
           <button
+            className={styles.prevBtn}
             onClick={() => step === 1 ? router.back() : setStep(1)}
-            className="flex items-center gap-2 px-5 py-2.5 border border-[var(--color-border)] rounded-full text-sm font-medium text-[var(--color-text-primary)] hover:bg-gray-50 transition-colors"
           >
-            ← Previous
+            {/* Arrow — 16.67 × 13.33 */}
+            <svg width="17" height="14" viewBox="0 0 17 14" fill="none">
+              <path d="M7.5 1L1.5 7M1.5 7L7.5 13M1.5 7H15.5" stroke="#303030" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Previous
           </button>
+
           {step === 1 ? (
-            <button onClick={handleNext}
-              className="flex items-center gap-2 px-5 py-2.5 bg-[var(--color-cta-black)] text-white rounded-full text-sm font-medium hover:bg-[var(--color-cta-black-hover)] transition-colors">
-              Next →
+            <button className={styles.nextBtn} onClick={handleNext}>
+              Next
+              <svg width="17" height="14" viewBox="0 0 17 14" fill="none">
+                <path d="M9.5 1L15.5 7M15.5 7L9.5 13M15.5 7H1.5" stroke="white" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </button>
           ) : (
-            <button onClick={handleSubmit} disabled={isLoading}
-              className="flex items-center gap-2 px-5 py-2.5 bg-[var(--color-primary)] text-white rounded-full text-sm font-medium hover:bg-[var(--color-primary-hover)] disabled:opacity-60 transition-colors">
+            <button
+              className={styles.generateBtn}
+              onClick={handleSubmit}
+              disabled={isLoading}
+            >
               {isLoading ? (
-                <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Generating...</>
-              ) : "Generate Paper →"}
+                <>
+                  <div style={{
+                    width: 16,
+                    height: 16,
+                    border: "2px solid white",
+                    borderTopColor: "transparent",
+                    borderRadius: "50%",
+                    animation: "spin 0.7s linear infinite",
+                    flexShrink: 0,
+                  }} />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  Generate Paper
+                  <svg width="17" height="14" viewBox="0 0 17 14" fill="none">
+                    <path d="M9.5 1L15.5 7M15.5 7L9.5 13M15.5 7H1.5" stroke="white" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </>
+              )}
             </button>
           )}
         </div>
+
       </div>
     </AppLayout>
   );
@@ -286,8 +392,8 @@ const handleSubmit = async () => {
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-xs text-[var(--color-text-secondary)]">{label}</p>
-      <p className="font-medium text-[var(--color-text-primary)]">{value}</p>
+      <p style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 12, color: "#A9A9A9", margin: "0 0 2px 0" }}>{label}</p>
+      <p style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 14, fontWeight: 500, color: "#303030", margin: 0 }}>{value}</p>
     </div>
   );
 }
