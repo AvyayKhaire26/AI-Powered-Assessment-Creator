@@ -9,8 +9,8 @@ import { logger } from "./utils/logger";
 import { initServices } from "./config";
 import { env } from "./config/env";
 import routes from "./routes";
-import "./workers/generation.worker";
-import "./workers/pdf.worker";
+import { getGenerationWorker } from "./workers/generation.worker";
+import { getPdfWorker } from "./workers/pdf.worker";
 import { Request, Response, NextFunction } from "express";
 import { ApiResponse } from "./utils/response.util";
 import { rateLimitMiddleware } from "./middlewares/rateLimit.middleware";
@@ -18,6 +18,8 @@ import path from "path";
 
 const app: Application = express();
 const httpServer = createServer(app);
+getGenerationWorker();
+getPdfWorker();
 
 app.use(helmet());
 app.use(cors({ origin: env.CLIENT_URL }));
