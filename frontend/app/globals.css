@@ -35,3 +35,7 @@ body {
   80%  { width: 85%; }
   100% { width: 90%; }
 }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
