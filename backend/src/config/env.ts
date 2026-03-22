@@ -9,7 +9,7 @@ const required = (key: string): string => {
 
 export const env = {
   NODE_ENV: process.env.NODE_ENV || "development",
-  PORT: parseInt(process.env.PORT || "5000", 10),
+  PORT: parseInt(process.env.PORT || "3000", 10),
   MONGO_URI: required("MONGO_URI"),
   REDIS_URL: required("REDIS_URL"),
   REDIS_TLS: process.env.REDIS_TLS === "true",
