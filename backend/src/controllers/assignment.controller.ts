@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { IAssignmentService } from "../interfaces/IAssignmentService";
-import { pdfQueue } from "../workers/pdf.worker";
+import { getPdfQueue } from "../config/queue";
 import { ApiResponse } from "../utils/response.util";
 import { logger } from "../utils/logger";
 
@@ -10,9 +10,7 @@ export class AssignmentController {
     async create(req: Request, res: Response, next: NextFunction): Promise<void> {
         logger.info("Inside AssignmentController create()");
         try {
-            const fileUrl = req.file
-                ? `/uploads/${req.file.filename}`
-                : undefined;
+            const fileUrl = req.file ? `/uploads/${req.file.filename}` : undefined;
 
             const result = await this.service.createAssignment({
                 ...req.body,
@@ -27,7 +25,6 @@ export class AssignmentController {
             next(error);
         }
     }
-
 
     async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
         logger.info("Inside AssignmentController getAll()");
@@ -88,7 +85,7 @@ export class AssignmentController {
         logger.info("Inside AssignmentController requestPdf()");
         try {
             const { id } = req.params as { id: string };
-            await pdfQueue.add("generate-pdf", { assignmentId: id });
+            await getPdfQueue().add("generate-pdf", { assignmentId: id });
             logger.info("End of AssignmentController requestPdf()");
             ApiResponse.success(res, { message: "PDF generation started" });
         } catch (error) {
