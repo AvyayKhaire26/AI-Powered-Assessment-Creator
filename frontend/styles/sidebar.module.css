@@ -1,0 +1,169 @@
+/* ── OUTER SHELL — floating card ── */
+.sidebar {
+  width: 304px;
+  height: calc(100vh - 24px);
+  margin: 12px;
+  border-radius: 16px;
+  background: #F6F6F6;
+  box-shadow:
+    0px 32px 48px 0px rgba(0, 0, 0, 0.2),
+    0px 16px 48px 0px rgba(0, 0, 0, 0.12);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+/* ── INNER LAYOUT ── */
+.inner {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+/* ── LOGO ── */
+.logoSection {
+  padding: 20px 16px 16px 16px;
+}
+
+.logoIcon {
+  width: 36px;
+  height: 36px;
+  background: var(--color-primary);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logoText {
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-weight: 700;
+  font-size: 28px;
+  line-height: 20px;
+  letter-spacing: -0.06em;
+  color: var(--color-text-primary);
+}
+
+/* ── CREATE BUTTON ── */
+.createWrap {
+  padding: 0 8px 16px 8px;
+}
+
+.createBtn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 42px;
+  background: #272727;
+  border-radius: 100px;
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  color: white;
+  text-decoration: none;
+  box-sizing: border-box;
+  z-index: 0;
+  box-shadow:
+    0px 0px 34.5px 0px rgba(255, 255, 255, 0.25) inset,
+    0px -1px 3.5px 0px rgba(177, 177, 177, 0.6) inset;
+  transition: opacity 0.15s;
+}
+
+.createBtn:hover {
+  opacity: 0.9;
+}
+
+/* ── NAV ── */
+.nav {
+  flex: 1;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 140%;
+  letter-spacing: -0.04em;
+  color: #6B6B6B;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.navItem:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: #1A1A1A;
+}
+
+.navItemActive {
+  background: #EADFD8;
+  color: #1A1A1A;
+}
+
+/* ── BOTTOM ── */
+.bottom {
+  padding: 8px 12px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ── SCHOOL CARD ── */
+.schoolCard {
+  width: 100%;
+  background: #ECECEC;
+  border-radius: 16px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: inset 0px 1px 2px rgba(255, 255, 255, 0.6);
+  box-sizing: border-box;
+  margin-top: 4px;
+}
+
+.schoolAvatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.schoolName {
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: #1a1a1a;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.schoolSub {
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
