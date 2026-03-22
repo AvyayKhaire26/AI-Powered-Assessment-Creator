@@ -45,19 +45,28 @@ export default function OutputPage({
     map.forEach((items, title) => answerKeyBySections.push({ title, items }));
   }
 
+  // Exact Logo: File outline with Solid Star at bottom-left
+  const FileWithStarIcon = (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* File Path */}
+      <path d="M13 2H6C4.89543 2 4 2.89543 4 4V19C4 20.1046 4.89543 21 6 21H18C19.1046 21 20 20.1046 20 19V9L13 2Z" stroke="#303030" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M13 2V9H20" stroke="#303030" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      {/* Solid Star at Bottom Left */}
+      <path d="M7.5 13.5L8.31 15.14L10.12 15.41L8.81 16.68L9.12 18.49L7.5 17.64L5.88 18.49L6.19 16.68L4.88 15.41L6.69 15.14L7.5 13.5Z" fill="#303030" />
+    </svg>
+  );
+
   return (
     <div className={styles.pageBg}>
       <div className={styles.paperWrapper}>
-
-        {/* BLACK BANNER */}
         <div className={styles.topBanner}>
           <p className={styles.bannerText}>
             Certainly, Lakshya! Here are customized Question Paper for your CBSE Grade 8 Science classes on the NCERT chapters:
           </p>
-          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
             {pdfUrl ? (
               <a href={pdfUrl} target="_blank" rel="noreferrer" className={styles.downloadBtn}>
-                <span className={styles.downloadIcon}>⬇</span>
+                {FileWithStarIcon}
                 Download PDF
               </a>
             ) : (
@@ -66,7 +75,7 @@ export default function OutputPage({
                 onClick={onDownloadPdf}
                 disabled={pdfLoading}
               >
-                <span className={styles.downloadIcon}>⬇</span>
+                {FileWithStarIcon}
                 {pdfLoading ? "Preparing..." : "Download as PDF"}
               </button>
             )}
@@ -80,35 +89,31 @@ export default function OutputPage({
           </div>
         </div>
 
-        {/* PAPER */}
         <div className={styles.paperContainer}>
-
-          {/* HEADER */}
           <h1 className={styles.schoolName}>{paper.school}</h1>
           <p className={styles.subject}>Subject: {paper.subject}</p>
           <p className={styles.className}>Class: {paper.className}</p>
 
-          {/* TIME + MARKS */}
           <div className={styles.timeMarksRow}>
             <span>{paper.timeAllowed ? `Time Allowed: ${paper.timeAllowed}` : ""}</span>
             <span>Maximum Marks: {paper.totalMarks}</span>
           </div>
 
-          {/* STUDENT INFO */}
+          <p className={styles.instructionLine}>All questions are compulsory unless stated otherwise.</p>
+
+          {/* Corrected Student Info with Unified Fixed Lengths */}
           <div className={styles.studentInfo}>
-            <div className={styles.infoLine}><span>Name:</span><div className={styles.line}></div></div>
-            <div className={styles.infoLine}><span>Roll Number:</span><div className={styles.line}></div></div>
-            <div className={styles.infoLine}><span>Class:</span><div className={styles.line}></div></div>
+            <div className={styles.infoLine}>Name: <span className={styles.underlineFixed}></span></div>
+            <div className={styles.infoLine}>Roll Number: <span className={styles.underlineFixed}></span></div>
+            <div className={styles.infoLine}>Class: {paper.className} Section: <span className={styles.underlineFixed}></span></div>
           </div>
 
-          {/* SECTIONS */}
           {paper.sections.map((section, i) => (
             <SectionBlock key={i} section={section} />
           ))}
 
           <p className={styles.endLine}>End of Question Paper</p>
 
-          {/* ANSWER KEY */}
           {answerKeyBySections.length > 0 && (
             <div className={styles.answerKey}>
               <h2 className={styles.answerKeyTitle}>Answer Key</h2>
@@ -122,7 +127,6 @@ export default function OutputPage({
               ))}
             </div>
           )}
-
         </div>
       </div>
     </div>
@@ -152,7 +156,7 @@ function QuestionRow({ question: q }: { question: GeneratedQuestion }) {
   return (
     <div className={styles.questionBlock}>
       <p className={styles.question}>
-        [{diff}] {questionLine} [{q.marks} {q.marks === 1 ? "Mark" : "Marks"}]
+        {q.number}. [{diff}] {questionLine} [{q.marks} {q.marks === 1 ? "Mark" : "Marks"}]
       </p>
       {optionLines.length > 0 && (
         <div className={styles.optionsGrid}>
