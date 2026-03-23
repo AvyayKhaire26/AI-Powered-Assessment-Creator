@@ -8,11 +8,75 @@ import EmptyState from "@/components/assignments/EmptyState";
 import { Assignment } from "@/types";
 import styles from "@/styles/assignments.module.css";
 
+// ── Toast Types ──────────────────────────────────────────────────────────────
+
+type ToastType = "success" | "error";
+
+interface Toast {
+  id: number;
+  message: string;
+  type: ToastType;
+}
+
+// ── Toast Container ──────────────────────────────────────────────────────────
+
+function ToastContainer({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id: number) => void }) {
+  return (
+    <div className={styles.toastContainer}>
+      {toasts.map((t) => (
+        <div
+          key={t.id}
+          className={`${styles.toast} ${t.type === "success" ? styles.toastSuccess : styles.toastError}`}
+        >
+          <span className={styles.toastIcon}>
+            {t.type === "success" ? (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            )}
+          </span>
+          <span className={styles.toastMessage}>{t.message}</span>
+          <button className={styles.toastClose} onClick={() => onDismiss(t.id)}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Toast Hook ───────────────────────────────────────────────────────────────
+
+function useToast() {
+  const [toasts, setToasts] = useState<Toast[]>([]);
+
+  const show = (message: string, type: ToastType = "success") => {
+    const id = Date.now();
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => dismiss(id), 3000); // auto-dismiss after 3s
+  };
+
+  const dismiss = (id: number) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  return { toasts, show, dismiss };
+}
+
+// ── Page ─────────────────────────────────────────────────────────────────────
+
 export default function AssignmentsPage() {
   const { assignments, isLoading, fetchAll, remove } = useAssignmentStore();
   const [search, setSearch] = useState("");
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const router = useRouter();
+  const { toasts, show, dismiss } = useToast();
 
   useEffect(() => { fetchAll(); }, []);
 
@@ -20,8 +84,21 @@ export default function AssignmentsPage() {
     a.title.toLowerCase().includes(search.toLowerCase())
   );
 
+  const handleDelete = async (id: string, title: string) => {
+    try {
+      await remove(id);
+      setOpenMenu(null);
+      show(`"${title}" deleted successfully`, "success");
+    } catch {
+      show("Failed to delete assignment", "error");
+    }
+  };
+
   return (
     <AppLayout title="Assignments" showBack>
+      {/* ── Toast Notifications ── */}
+      <ToastContainer toasts={toasts} onDismiss={dismiss} />
+
       {isLoading && assignments.length === 0 ? (
         <div className="flex items-center justify-center h-full">
           <div className="w-8 h-8 border-4 border-[#1A1A1A] border-t-transparent rounded-full animate-spin" />
@@ -63,7 +140,7 @@ export default function AssignmentsPage() {
             </div>
           </div>
 
-          {/* ── GRID (Responsive 1-col Mobile, 2-col Desktop) ── */}
+          {/* ── GRID ── */}
           <div className={styles.grid}>
             {filtered.map((a) => (
               <AssignmentCard
@@ -72,7 +149,7 @@ export default function AssignmentsPage() {
                 isMenuOpen={openMenu === a._id}
                 onMenuToggle={() => setOpenMenu(openMenu === a._id ? null : a._id)}
                 onView={() => router.push(`/assignments/${a._id}`)}
-                onDelete={() => { remove(a._id); setOpenMenu(null); }}
+                onDelete={() => handleDelete(a._id, a.title)}
               />
             ))}
           </div>
