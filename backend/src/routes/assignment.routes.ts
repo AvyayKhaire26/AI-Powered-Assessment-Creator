@@ -28,6 +28,6 @@ router.get("/", (req, res, next) => controller.getAll(req, res, next));
 router.get("/:id", (req, res, next) => controller.getById(req, res, next));
 router.delete("/:id", (req, res, next) => controller.delete(req, res, next));
 router.post("/:id/regenerate", aiRateLimit, (req, res, next) => controller.regenerate(req, res, next));
-router.post("/:id/pdf", (req, res, next) => controller.requestPdf(req, res, next));
+router.get("/:id/pdf", (req, res, next) => controller.requestPdf(req, res, next));
 
 export default router;
