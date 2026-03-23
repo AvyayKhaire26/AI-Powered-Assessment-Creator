@@ -9,9 +9,8 @@ import { useSocket } from "@/hooks/useSocket";
 export default function AssignmentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { current, fetchById, regenerate, requestPdf, isLoading, error } = useAssignmentStore();
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-  const [pdfLoading, setPdfLoading] = useState(false);
+  const { current, fetchById, regenerate, requestPdf, isLoading, error } =
+    useAssignmentStore();
   const [socketError, setSocketError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -26,21 +25,19 @@ export default function AssignmentDetailPage() {
     "paper:failed": ({ reason }) => {
       setSocketError(reason ?? "Generation failed. Please try again.");
     },
-    "pdf:ready": ({ pdfUrl }) => {
-      setPdfUrl(pdfUrl);
-      setPdfLoading(false);
-    },
   });
 
   const handleRegenerate = async () => {
     setSocketError(null);
-    setPdfUrl(null);
-    await regenerate(id);
+    try {
+      await regenerate(id);
+    } catch {
+      // error already set in store
+    }
   };
 
-  const handleDownloadPdf = async () => {
-    setPdfLoading(true);
-    await requestPdf(id);
+  const handleDownloadPdf = () => {
+    requestPdf(id);
   };
 
   const assignment = current?._id === id ? current : null;
@@ -66,8 +63,6 @@ export default function AssignmentDetailPage() {
       ) : (
         <OutputPage
           assignment={assignment!}
-          pdfUrl={pdfUrl}
-          pdfLoading={pdfLoading}
           onRegenerate={handleRegenerate}
           onDownloadPdf={handleDownloadPdf}
           isRegenerating={isLoading}
@@ -76,6 +71,8 @@ export default function AssignmentDetailPage() {
     </AppLayout>
   );
 }
+
+// ── Generating State ──────────────────────────────────────────────────────────
 
 function GeneratingState() {
   const steps = [
@@ -99,8 +96,12 @@ function GeneratingState() {
         <div className="absolute inset-3 rounded-full bg-[var(--color-primary)] opacity-10 animate-pulse" />
       </div>
       <div>
-        <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-1">Generating your paper</h2>
-        <p className="text-sm text-[var(--color-text-secondary)] transition-all duration-500">{steps[step]}</p>
+        <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-1">
+          Generating your paper
+        </h2>
+        <p className="text-sm text-[var(--color-text-secondary)] transition-all duration-500">
+          {steps[step]}
+        </p>
       </div>
       <p className="text-xs text-[var(--color-text-secondary)] max-w-xs">
         This usually takes 15–30 seconds. You'll be notified as soon as it's ready.
@@ -108,6 +109,8 @@ function GeneratingState() {
     </div>
   );
 }
+
+// ── Failed State ──────────────────────────────────────────────────────────────
 
 function FailedState({
   reason,
@@ -121,12 +124,24 @@ function FailedState({
   return (
     <div className="flex flex-col items-center justify-center h-full gap-4 text-center px-4">
       <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
-        <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M12 3a9 9 0 100 18A9 9 0 0012 3z" />
+        <svg
+          className="w-8 h-8 text-red-500"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 9v4m0 4h.01M12 3a9 9 0 100 18A9 9 0 0012 3z"
+          />
         </svg>
       </div>
       <div>
-        <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-1">Generation Failed</h2>
+        <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-1">
+          Generation Failed
+        </h2>
         <p className="text-sm text-red-500 max-w-sm">{reason}</p>
       </div>
       <button

@@ -21,52 +21,49 @@ export default function AssignmentsPage() {
   );
 
   return (
-    <AppLayout title="Assignment" showBack>
+    <AppLayout title="Assignments" showBack>
       {isLoading && assignments.length === 0 ? (
         <div className="flex items-center justify-center h-full">
-          <div className="w-8 h-8 border-4 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-[#1A1A1A] border-t-transparent rounded-full animate-spin" />
         </div>
       ) : assignments.length === 0 ? (
         <EmptyState />
       ) : (
         <div className={styles.page}>
 
-          {/* ── HEADER ── */}
-          <div className={styles.header}>
-            {/* Double-layer green dot */}
-            <div className={styles.greenDotWrap}>
-              <span className={styles.greenDotOuter} />
-              <span className={styles.greenDotInner} />
+          {/* ── DESKTOP HEADER (Hidden on Mobile) ── */}
+          <div className={styles.desktopHeaderWrap}>
+            <div className={styles.header}>
+              <div className={styles.greenDotWrap}>
+                <span className={styles.greenDotOuter} />
+                <span className={styles.greenDotInner} />
+              </div>
+              <h2 className={styles.title}>Assignments</h2>
             </div>
-            <h2 className={styles.title}>Assignments</h2>
+            <p className={styles.subtitle}>Manage and create assignments for your classes.</p>
           </div>
-          <p className={styles.subtitle}>Manage and create assignments for your classes.</p>
 
           {/* ── FILTER ROW ── */}
           <div className={styles.filterRow}>
             <button className={styles.filterBtn}>
-              {/* Plain gray funnel */}
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A9A9A9" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 4h18M6 8h12M9 12h6" />
               </svg>
-              Filter By
+              Filter
             </button>
             <div className={styles.searchBox}>
-              {/* Plain gray magnifying glass */}
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A9A9A9" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
               </svg>
               <input
-                placeholder="Search Assignment"
+                placeholder="Search Name"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
           </div>
 
-
-
-          {/* ── GRID ── */}
+          {/* ── GRID (Responsive 1-col Mobile, 2-col Desktop) ── */}
           <div className={styles.grid}>
             {filtered.map((a) => (
               <AssignmentCard
@@ -82,7 +79,7 @@ export default function AssignmentsPage() {
         </div>
       )}
 
-      {/* ── BOTTOM BLUR + FAB ── */}
+      {/* ── BOTTOM BLUR + FAB (Desktop Only) ── */}
       {assignments.length > 0 && (
         <div className={styles.fabWrap}>
           <Link href="/assignments/create" className={styles.fabBtn}>
@@ -95,7 +92,7 @@ export default function AssignmentsPage() {
   );
 }
 
-// ── Card ─────────────────────────────────────────────────────────────────────
+// ── Card Component ───────────────────────────────────────────────────────────
 
 function AssignmentCard({
   assignment: a,
@@ -120,8 +117,13 @@ function AssignmentCard({
     return () => document.removeEventListener("mousedown", handler);
   }, [isMenuOpen]);
 
-  const fmt = (d: string) =>
-    new Date(d).toLocaleDateString("en-GB").replace(/\//g, "-");
+  const fmt = (d: string) => {
+    const date = new Date(d);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
 
   return (
     <div className={styles.card} onClick={onView}>
@@ -133,11 +135,10 @@ function AssignmentCard({
               className={styles.menuBtn}
               onClick={(e) => { e.stopPropagation(); onMenuToggle(); }}
             >
-              {/* 3 dots — vertical, 4px each, 24px gap */}
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                <circle cx="10" cy="4" r="2" />
-                <circle cx="10" cy="10" r="2" />
-                <circle cx="10" cy="16" r="2" />
+              <svg width="4" height="16" viewBox="0 0 4 16" fill="#1A1A1A">
+                <circle cx="2" cy="2" r="2" />
+                <circle cx="2" cy="8" r="2" />
+                <circle cx="2" cy="14" r="2" />
               </svg>
             </button>
             {isMenuOpen && (
@@ -160,13 +161,12 @@ function AssignmentCard({
         </div>
       </div>
 
-      {/* Dates */}
       <div className={styles.cardDates}>
         <span>
           <span className={styles.dateLabel}>Assigned on </span>
           <span className={styles.dateValue}>: {fmt(a.createdAt)}</span>
         </span>
-        <span>
+        <span style={{ marginLeft: "8px" }}>
           <span className={styles.dateLabel}>Due </span>
           <span className={styles.dateValue}>: {fmt(a.dueDate)}</span>
         </span>
