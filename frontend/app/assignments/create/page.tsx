@@ -20,6 +20,65 @@ const defaultQT = (): QuestionTypeInput => ({ type: QUESTION_TYPES[0], count: 4,
 
 type FormErrors = Partial<Record<string, string>>;
 
+// ── Toast ────────────────────────────────────────────────────────────────────
+
+type ToastType = "success" | "error";
+
+interface Toast {
+  id: number;
+  message: string;
+  type: ToastType;
+}
+
+function ToastContainer({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id: number) => void }) {
+  return (
+    <div className={styles.toastContainer}>
+      {toasts.map((t) => (
+        <div
+          key={t.id}
+          className={`${styles.toast} ${t.type === "success" ? styles.toastSuccess : styles.toastError}`}
+        >
+          <span className={styles.toastIcon}>
+            {t.type === "success" ? (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            )}
+          </span>
+          <span className={styles.toastMessage}>{t.message}</span>
+          <button className={styles.toastClose} onClick={() => onDismiss(t.id)}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function useToast() {
+  const [toasts, setToasts] = useState<Toast[]>([]);
+
+  const show = (message: string, type: ToastType = "success") => {
+    const id = Date.now();
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => dismiss(id), 3000);
+  };
+
+  const dismiss = (id: number) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  return { toasts, show, dismiss };
+}
+
+// ── Page ─────────────────────────────────────────────────────────────────────
+
 export default function CreatePage() {
   const router = useRouter();
   const { create, isLoading, error, clearError } = useAssignmentStore();
@@ -30,6 +89,7 @@ export default function CreatePage() {
   });
   const [file, setFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
+  const { toasts, show, dismiss } = useToast();
 
   const validate = (): boolean => {
     const e: FormErrors = {};
@@ -52,9 +112,11 @@ export default function CreatePage() {
     clearError();
     try {
       const assignment = await create(form);
-      router.push(`/assignments/${assignment._id}`);
-    } catch {
-      // error already set in store
+      show("Assignment queued! Redirecting…", "success");
+      // Brief delay so user sees the toast before navigating
+      setTimeout(() => router.push(`/assignments/${assignment._id}`), 800);
+    } catch (e: any) {
+      show(e?.message || "Failed to create assignment", "error");
     }
   };
 
@@ -71,24 +133,23 @@ export default function CreatePage() {
 
   return (
     <AppLayout title="Assignment" showBack>
+      {/* ── Toast Notifications ── */}
+      <ToastContainer toasts={toasts} onDismiss={dismiss} />
+
       <div className={styles.wrapper}>
 
-        {/* ── HEADER (Responsive Desktop vs Mobile) ── */}
+        {/* ── HEADER ── */}
         <div className={styles.header}>
           <div className={styles.headerTop}>
-            {/* Desktop Green Dot */}
             <div className={styles.greenDotWrap}>
               <span className={styles.greenDotOuter} />
               <span className={styles.greenDotInner} />
             </div>
-
-            {/* Mobile Back Arrow */}
             <button className={styles.mobileBackBtn} onClick={() => router.back()}>
               <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#303030" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
               </svg>
             </button>
-
             <h1 className={styles.title}>Create Assignment</h1>
           </div>
           <p className={styles.subtitle}>Set up a new assignment for your students</p>
@@ -186,12 +247,11 @@ export default function CreatePage() {
 
             {/* ── QUESTION TYPES ── */}
             <div>
-              {/* Desktop Only Headers */}
               <div className={styles.desktopHeaders}>
                 <div style={{ flex: 1 }}>
                   <label className={styles.fieldLabel} style={{ margin: 0 }}>Question Type</label>
                 </div>
-                <div style={{ width: 14 }}></div> 
+                <div style={{ width: 14 }}></div>
                 <div style={{ width: 100, textAlign: "center" }}>
                   <span style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 14, color: "#303030" }}>No. of Questions</span>
                 </div>
@@ -203,9 +263,7 @@ export default function CreatePage() {
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {form.questionTypes.map((qt, i) => (
                   <div key={i} className={styles.qRow}>
-
                     <div className={styles.qRowTop}>
-                      {/* Select Dropdown */}
                       <div className={styles.qSelectWrap}>
                         <select value={qt.type} onChange={(e) => updateQT(i, "type", e.target.value)}>
                           {QUESTION_TYPES.map((t) => <option key={t}>{t}</option>)}
@@ -214,8 +272,6 @@ export default function CreatePage() {
                           <path d="M1 0.5L4 3.5L7 0.5" stroke="#303030" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                       </div>
-
-                      {/* X Remove Button */}
                       <div style={{ width: 14, display: "flex", justifyContent: "center" }}>
                         {form.questionTypes.length > 1 && (
                           <button type="button" className={styles.removeBtn} onClick={() => removeQT(i)}>
@@ -228,7 +284,6 @@ export default function CreatePage() {
                     </div>
 
                     <div className={styles.qRowBottom}>
-                      {/* Count stepper with mobile label */}
                       <div className={styles.stepperGroup}>
                         <span className={styles.mobileLabel}>No. of Questions</span>
                         <div className={styles.stepper}>
@@ -237,8 +292,6 @@ export default function CreatePage() {
                           <button type="button" className={styles.stepBtn} onClick={() => stepCount(i, "count", 1)}>+</button>
                         </div>
                       </div>
-
-                      {/* Marks stepper with mobile label */}
                       <div className={styles.stepperGroup}>
                         <span className={styles.mobileLabel}>Marks</span>
                         <div className={styles.stepper}>
@@ -248,12 +301,10 @@ export default function CreatePage() {
                         </div>
                       </div>
                     </div>
-
                   </div>
                 ))}
               </div>
 
-              {/* Add Question Type */}
               <button type="button" className={styles.addQTBtn} onClick={addQT}>
                 <span className={styles.addQTCircle}>
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -329,6 +380,7 @@ export default function CreatePage() {
             {file && (
               <p style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 14, color: "#5E5E5E" }}>📎 {file.name}</p>
             )}
+            {/* Inline error kept as fallback, toast handles primary notification */}
             {error && (
               <p style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 14, color: "#ef4444", background: "#fef2f2", padding: "8px 16px", borderRadius: 8, marginTop: 8 }}>
                 {error}
