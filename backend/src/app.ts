@@ -22,7 +22,26 @@ getGenerationWorker();
 getPdfWorker();
 
 app.use(helmet());
-app.use(cors({ origin: env.CLIENT_URL }));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      const allowedOrigins = env.CLIENT_URL
+        ? env.CLIENT_URL.split(",").map((o) => o.trim())
+        : [];
+
+      // allow requests with no origin (mobile apps, curl, Postman)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS blocked: ${origin}`));
+      }
+    },
+    credentials: true,
+  })
+);
+
 app.use(morgan("dev"));
 app.use(rateLimitMiddleware({
   capacity: 20,       // max 20 requests stored
