@@ -1,23 +1,23 @@
 import { Request, Response, NextFunction } from "express";
 import { IAssignmentService } from "../interfaces/IAssignmentService";
-import { getPdfQueue } from "../config/queue";
+import { PdfService } from "../services/pdf.service";
 import { ApiResponse } from "../utils/response.util";
 import { logger } from "../utils/logger";
 
 export class AssignmentController {
+    private readonly pdfService = new PdfService();
+
     constructor(private readonly service: IAssignmentService) { }
 
     async create(req: Request, res: Response, next: NextFunction): Promise<void> {
         logger.info("Inside AssignmentController create()");
         try {
             const fileUrl = req.file ? `/uploads/${req.file.filename}` : undefined;
-
             const result = await this.service.createAssignment({
                 ...req.body,
                 school: req.user!.school,
                 fileUrl,
             });
-
             logger.info("End of AssignmentController create()");
             ApiResponse.created(res, result);
         } catch (error) {
@@ -85,9 +85,26 @@ export class AssignmentController {
         logger.info("Inside AssignmentController requestPdf()");
         try {
             const { id } = req.params as { id: string };
-            await getPdfQueue().add("generate-pdf", { assignmentId: id });
+
+            const assignment = await this.service.getAssignmentById(id);
+            if (!assignment || !assignment.result) {
+                ApiResponse.notFound(res, "Assignment result not found");
+                return;
+            }
+
+            const pdfBuffer = await this.pdfService.generatePdf(
+                assignment.result,
+                assignment.title
+            );
+
+            const filename = assignment.title.replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_]/g, "");
+
+            res.setHeader("Content-Type", "application/pdf");
+            res.setHeader("Content-Disposition", `attachment; filename="${filename}.pdf"`);
+            res.setHeader("Content-Length", pdfBuffer.length);
+            res.end(pdfBuffer);
+
             logger.info("End of AssignmentController requestPdf()");
-            ApiResponse.success(res, { message: "PDF generation started" });
         } catch (error) {
             logger.error(`Error inside AssignmentController requestPdf(): ${error}`);
             next(error);
