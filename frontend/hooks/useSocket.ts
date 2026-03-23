@@ -5,7 +5,6 @@ import { io, Socket } from "socket.io-client";
 type SocketEvents = {
   "paper:ready": (data: { assignmentId: string }) => void;
   "paper:failed": (data: { assignmentId: string; reason: string }) => void;
-  "pdf:ready": (data: { assignmentId: string; pdfUrl: string }) => void;
 };
 
 export function useSocket(
@@ -17,7 +16,9 @@ export function useSocket(
   useEffect(() => {
     if (!assignmentId) return;
 
-    const socket = io(process.env.NEXT_PUBLIC_WS_URL!, { transports: ["websocket"] });
+    const socket = io(process.env.NEXT_PUBLIC_WS_URL!, {
+      transports: ["websocket"],
+    });
     socketRef.current = socket;
 
     socket.on("connect", () => {
@@ -26,7 +27,6 @@ export function useSocket(
 
     if (handlers["paper:ready"]) socket.on("paper:ready", handlers["paper:ready"]);
     if (handlers["paper:failed"]) socket.on("paper:failed", handlers["paper:failed"]);
-    if (handlers["pdf:ready"]) socket.on("pdf:ready", handlers["pdf:ready"]);
 
     return () => {
       socket.disconnect();
