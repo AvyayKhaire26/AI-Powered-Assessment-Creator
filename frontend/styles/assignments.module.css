@@ -5,7 +5,11 @@
   position: relative;
 }
 
-/* ── HEADER ── */
+/* ── HEADER (Desktop Only) ── */
+.desktopHeaderWrap {
+  display: block;
+}
+
 .header {
   display: flex;
   align-items: center;
@@ -13,7 +17,6 @@
   margin-bottom: 4px;
 }
 
-/* Green dot — 2 layers: outer glow + inner solid */
 .greenDotWrap {
   position: relative;
   width: 18px;
@@ -51,7 +54,7 @@
   font-size: 20px;
   line-height: 140%;
   letter-spacing: -0.04em;
-  color: var(--color-text-primary);
+  color: #1A1A1A;
   margin: 0;
 }
 
@@ -61,7 +64,7 @@
   font-size: 14px;
   line-height: 140%;
   letter-spacing: -0.04em;
-  color: var(--color-text-secondary);
+  color: #666666;
   margin: 0 0 16px 0;
   padding-left: 28px;
 }
@@ -72,13 +75,13 @@
   height: 64px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 16px;
   padding: 0 16px;
   box-sizing: border-box;
   margin-bottom: 20px;
   background: white;
-  border-radius: 16px;
-  border: 1px solid var(--color-border);
+  border-radius: 100px;
+  border: 1px solid #E5E5E5;
 }
 
 .filterBtn {
@@ -87,33 +90,21 @@
   gap: 8px;
   background: none;
   border: none;
+  border-right: 1px solid #E5E5E5;
+  padding-right: 16px;
   cursor: pointer;
   font-family: "Bricolage Grotesque", sans-serif;
-  font-weight: 700;
+  font-weight: 400;
   font-size: 14px;
-  line-height: 140%;
-  letter-spacing: -0.04em;
-  color: var(--color-text-primary);
-  padding: 0;
+  color: #A9A9A9;
 }
 
 .searchBox {
-  width: 380px;
-  height: 44px;
-  border-radius: 100px;
-  border: 1px solid var(--color-border);
+  flex: 1;
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 11px 16px;
-  background: #fafafa;
-  box-sizing: border-box;
-  transition: border-color 0.15s;
-}
-
-.searchBox:focus-within {
-  border-color: #E8702A;
-  background: white;
+  background: transparent;
 }
 
 .searchBox input {
@@ -124,11 +115,11 @@
   font-family: "Bricolage Grotesque", sans-serif;
   font-weight: 400;
   font-size: 14px;
-  color: var(--color-text-primary);
+  color: #1A1A1A;
 }
 
 .searchBox input::placeholder {
-  color: #B0B0B0;
+  color: #A9A9A9;
 }
 
 /* ── GRID ── */
@@ -142,23 +133,23 @@
 /* ── CARD ── */
 .card {
   width: 100%;
-  min-height: 162px;       
+  min-height: 104px;
   background: white;
   border-radius: 24px;
-  padding: 24px;
+  padding: 20px 24px;
   box-sizing: border-box;
   position: relative;
   cursor: pointer;
-  border: 1px solid #ebebeb;
+  border: 1px solid #F0F0F0;
   transition: box-shadow 0.15s;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;  /* ← pushes dates to bottom */
-  gap: 0;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .card:hover {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
 .cardTop {
@@ -170,15 +161,14 @@
 
 .cardTitle {
   font-family: "Bricolage Grotesque", sans-serif;
-  font-weight: 800;
-  font-size: 22px;
+  font-weight: 700;
+  font-size: 18px;
   line-height: 120%;
   letter-spacing: -0.04em;
-  color: var(--color-text-primary);
+  color: #1A1A1A;
   margin: 0;
 }
 
-/* 3-dot menu button */
 .menuBtn {
   background: none;
   border: none;
@@ -187,28 +177,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  border-radius: 6px;
-  color: #b0b0b0;
-  transition: background 0.15s, color 0.15s;
-}
-
-.menuBtn:hover {
-  background: #f5f5f5;
-  color: #555;
 }
 
 .menuDropdown {
   position: absolute;
-  right: 20px;
-  top: 48px;
+  right: 0px;
+  top: 24px;
   background: white;
   border: 1px solid #e8e8e8;
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
   z-index: 20;
-  overflow: hidden;
-  min-width: 160px;
+  min-width: 140px;
 }
 
 .menuItem {
@@ -216,81 +196,59 @@
   text-align: left;
   padding: 10px 16px;
   font-family: "Bricolage Grotesque", sans-serif;
-  font-weight: 400;
+  font-weight: 500;
   font-size: 14px;
-  color: var(--color-text-primary);
+  color: #1A1A1A;
   background: none;
   border: none;
   cursor: pointer;
-  transition: background 0.1s;
-  display: block;
-}
-
-.menuItem:hover {
-  background: #f5f5f5;
 }
 
 .menuItemDelete {
   color: #ef4444;
 }
 
-.menuItemDelete:hover {
-  background: #fef2f2;
-}
-
 /* ── CARD BOTTOM DATES ── */
 .cardDates {
   display: flex;
   align-items: center;
-  gap: 24px;
 }
 
 .dateLabel {
   font-family: "Bricolage Grotesque", sans-serif;
   font-weight: 800;
-  font-size: 14px;
-  line-height: 120%;
-  letter-spacing: -0.04em;
-  color: var(--color-text-primary);
+  font-size: 13px;
+  color: #1A1A1A;
 }
 
 .dateValue {
   font-family: "Bricolage Grotesque", sans-serif;
-  font-weight: 400;
-  font-size: 14px;
-  line-height: 120%;
-  letter-spacing: -0.04em;
-  color: var(--color-text-secondary);
+  font-weight: 500;
+  font-size: 13px;
+  color: #666666;
 }
 
-/* ── BOTTOM BLUR + FAB ── */
-/* ── BOTTOM BLUR + FAB ── */
+/* ── BOTTOM BLUR + FAB (Desktop) ── */
 .fabWrap {
-  /* Change from fixed to sticky */
   position: sticky; 
   bottom: 0;
   left: 0;
   width: 100%;
   height: 100px;
-  
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: -100px; /* Pulls it up so it sits over the cards */
+  margin-top: -100px;
   padding-bottom: 20px;
   box-sizing: border-box;
-  
-  /* Use the exact background color of your page for the gradient */
-  background: linear-gradient(to top, #f3f3f1 40%, transparent 100%);
+  background: linear-gradient(to top, rgba(243,244,246,0.95) 40%, transparent 100%);
   backdrop-filter: blur(8px);
-  z-index: 30;
-  
-  /* Critical: stops the container from blocking clicks on the grid */
   pointer-events: none; 
+  z-index: 30;
 }
 
 .fabBtn {
-  pointer-events: auto; /* Buttons must be clickable */
+  pointer-events: auto;
   width: 208px;
   height: 46px;
   border-radius: 100px;
@@ -303,13 +261,34 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  cursor: pointer;
   text-decoration: none;
-  border: 1.5px solid #1a1a1a;
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-  transition: background 0.2s;
 }
 
-.fabBtn:hover {
-  background: #333;
+/* ── RESPONSIVE MEDIA QUERIES ── */
+@media (max-width: 768px) {
+  .page {
+    padding: 16px;
+    background: #E5E5E5; 
+  }
+
+  .desktopHeaderWrap {
+    display: none; 
+  }
+
+  .filterRow {
+    border-radius: 16px; 
+    height: 52px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr; 
+    gap: 12px;
+    padding-bottom: 120px; 
+  }
+
+  /* Completely hide the desktop button wrapper on mobile */
+  .fabWrap {
+    display: none;
+  }
 }
