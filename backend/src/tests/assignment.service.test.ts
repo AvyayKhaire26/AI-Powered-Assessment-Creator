@@ -6,23 +6,28 @@ import { CreateAssignmentDTO } from "../types";
 // mock repository
 jest.mock("../repositories/assignment.repository");
 
-// mock queue
+// mock queue — getter, not live instance
 jest.mock("../config/queue", () => ({
-  assignmentQueue: {
+  getAssignmentQueue: jest.fn().mockReturnValue({
     add: jest.fn().mockResolvedValue({ id: "job-123" }),
-  },
+  }),
 }));
 
-// mock redis
+// mock redis — define mock object INSIDE the factory to avoid hoisting issue
 jest.mock("../config/redis", () => ({
-  redisConnection: {
+  getRedisConnection: jest.fn().mockReturnValue({
     get: jest.fn().mockResolvedValue(null),
     setex: jest.fn().mockResolvedValue("OK"),
     del: jest.fn().mockResolvedValue(1),
-  },
+  }),
 }));
 
-// mock logger — suppress logs during tests
+// mock worker
+jest.mock("../workers/generation.worker", () => ({
+  getGenerationWorker: jest.fn(),
+}));
+
+// mock logger
 jest.mock("../utils/logger", () => ({
   logger: {
     info: jest.fn(),
@@ -30,6 +35,12 @@ jest.mock("../utils/logger", () => ({
     error: jest.fn(),
   },
 }));
+
+// ── Grab the mock redis instance AFTER jest.mock declarations ──
+const getMockRedis = () => {
+  const { getRedisConnection } = require("../config/redis");
+  return getRedisConnection();
+};
 
 const mockAssignment = (overrides = {}): IAssignment =>
   ({
@@ -97,26 +108,24 @@ describe("AssignmentService", () => {
   describe("getAssignmentById()", () => {
     it("should return cached assignment if cache hit", async () => {
       const cached = mockAssignment({ status: "completed" });
-      const { redisConnection } = require("../config/redis");
-      redisConnection.get.mockResolvedValue(JSON.stringify(cached));
+      getMockRedis().get.mockResolvedValue(JSON.stringify(cached));
 
       const result = await service.getAssignmentById("assignment-123");
 
-      expect(redisConnection.get).toHaveBeenCalledWith("assignment:assignment-123");
+      expect(getMockRedis().get).toHaveBeenCalledWith("assignment:assignment-123");
       expect(repository.findById).not.toHaveBeenCalled();
       expect(result?.status).toBe("completed");
     });
 
     it("should fetch from DB and set cache on cache miss", async () => {
       const assignment = mockAssignment();
-      const { redisConnection } = require("../config/redis");
-      redisConnection.get.mockResolvedValue(null);
+      getMockRedis().get.mockResolvedValue(null);
       repository.findById.mockResolvedValue(assignment);
 
       const result = await service.getAssignmentById("assignment-123");
 
       expect(repository.findById).toHaveBeenCalledWith("assignment-123");
-      expect(redisConnection.setex).toHaveBeenCalledWith(
+      expect(getMockRedis().setex).toHaveBeenCalledWith(
         "assignment:assignment-123",
         3600,
         JSON.stringify(assignment)
@@ -125,14 +134,13 @@ describe("AssignmentService", () => {
     });
 
     it("should return null if assignment not found", async () => {
-      const { redisConnection } = require("../config/redis");
-      redisConnection.get.mockResolvedValue(null);
+      getMockRedis().get.mockResolvedValue(null);
       repository.findById.mockResolvedValue(null);
 
       const result = await service.getAssignmentById("nonexistent");
 
       expect(result).toBeNull();
-      expect(redisConnection.setex).not.toHaveBeenCalled();
+      expect(getMockRedis().setex).not.toHaveBeenCalled();
     });
   });
 
@@ -160,13 +168,12 @@ describe("AssignmentService", () => {
 
   describe("deleteAssignment()", () => {
     it("should delete assignment and invalidate cache", async () => {
-      const { redisConnection } = require("../config/redis");
       repository.delete.mockResolvedValue(undefined);
 
       await service.deleteAssignment("assignment-123");
 
       expect(repository.delete).toHaveBeenCalledWith("assignment-123");
-      expect(redisConnection.del).toHaveBeenCalledWith("assignment:assignment-123");
+      expect(getMockRedis().del).toHaveBeenCalledWith("assignment:assignment-123");
     });
 
     it("should throw if repository.delete fails", async () => {
@@ -180,13 +187,17 @@ describe("AssignmentService", () => {
 
   describe("regenerateAssignment()", () => {
     it("should reset status, invalidate cache, enqueue new job", async () => {
-      const { redisConnection } = require("../config/redis");
       const processing = mockAssignment({ status: "processing", result: undefined });
       const withJob = mockAssignment({ status: "processing", jobId: "job-456" });
 
+      const { getAssignmentQueue } = require("../config/queue");
+      getAssignmentQueue.mockReturnValue({
+        add: jest.fn().mockResolvedValue({ id: "job-456" }),
+      });
+
       repository.update
-        .mockResolvedValueOnce(processing)   // first update — reset status
-        .mockResolvedValueOnce(withJob);     // second update — set jobId
+        .mockResolvedValueOnce(processing)
+        .mockResolvedValueOnce(withJob);
 
       const result = await service.regenerateAssignment("assignment-123");
 
@@ -194,7 +205,7 @@ describe("AssignmentService", () => {
         status: "processing",
         result: undefined,
       });
-      expect(redisConnection.del).toHaveBeenCalledWith("assignment:assignment-123");
+      expect(getMockRedis().del).toHaveBeenCalledWith("assignment:assignment-123");
       expect(result.jobId).toBe("job-456");
     });
 
@@ -211,11 +222,9 @@ describe("AssignmentService", () => {
 
   describe("invalidateCache()", () => {
     it("should delete the cache key for given id", async () => {
-      const { redisConnection } = require("../config/redis");
-
       await service.invalidateCache("assignment-123");
 
-      expect(redisConnection.del).toHaveBeenCalledWith("assignment:assignment-123");
+      expect(getMockRedis().del).toHaveBeenCalledWith("assignment:assignment-123");
     });
   });
 });
