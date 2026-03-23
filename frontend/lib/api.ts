@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { Assignment, CreateAssignmentDTO } from "@/types";
 
 const client = axios.create({
@@ -8,6 +8,33 @@ const client = axios.create({
     "Content-Type": "application/json",
   },
 });
+
+// ── Global error interceptor ──────────────────────────────────────────────────
+client.interceptors.response.use(
+  (res) => res,
+  (err: AxiosError<{ message?: string }>) => {
+    const status = err.response?.status;
+    const serverMsg = err.response?.data?.message;
+
+    if (status === 429) {
+      return Promise.reject(new Error("Too many requests. Please wait a moment before trying again."));
+    }
+    if (status === 404) {
+      return Promise.reject(new Error(serverMsg ?? "Resource not found."));
+    }
+    if (status === 401) {
+      return Promise.reject(new Error("Unauthorized. Please check your credentials."));
+    }
+    if (status === 400) {
+      return Promise.reject(new Error(serverMsg ?? "Invalid request. Please check your inputs."));
+    }
+    if (status && status >= 500) {
+      return Promise.reject(new Error("Server error. Please try again later."));
+    }
+
+    return Promise.reject(new Error(serverMsg ?? err.message ?? "Something went wrong."));
+  }
+);
 
 export const api = {
   assignments: {
@@ -30,8 +57,6 @@ export const api = {
       const res = await client.post(`/assignments/${id}/regenerate`);
       return res.data.data;
     },
-    requestPdf: async (id: string): Promise<void> => {
-      await client.post(`/assignments/${id}/pdf`);
-    },
+    // requestPdf removed — handled via window.open in store directly
   },
 };
