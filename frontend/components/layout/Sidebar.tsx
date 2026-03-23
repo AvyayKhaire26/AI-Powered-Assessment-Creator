@@ -1,6 +1,8 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAssignmentStore } from "@/store/useAssignmentStore";
+import { useEffect } from "react";
 import styles from "@/styles/sidebar.module.css";
 
 const NAV_ITEMS = [
@@ -13,6 +15,13 @@ const NAV_ITEMS = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { assignments, fetchAll } = useAssignmentStore();
+
+  useEffect(() => {
+    fetchAll();
+  }, []);
+
+  const assignmentCount = assignments.length;
 
   return (
     <div className={styles.sidebar}>
@@ -31,8 +40,6 @@ export default function Sidebar() {
         {/* ── CREATE BUTTON ── */}
         <div className={styles.createWrap}>
           <Link href="/assignments/create" className={styles.createBtn}>
-
-            {/* Gradient border ring (Original Styles) */}
             <span
               aria-hidden
               style={{
@@ -48,23 +55,19 @@ export default function Sidebar() {
                 zIndex: -1,
               }}
             />
-
-            {/* Two-Star Icon */}
-            <svg 
-              width="22" 
-              height="22" 
-              viewBox="0 0 24 24" 
-              fill="white" 
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="white"
               xmlns="http://www.w3.org/2000/svg"
             >
               <path d="M7 6L9 11L14 13L9 15L7 20L5 15L0 13L5 11L7 6Z" />
               <path d="M18 2L19.2 5.5L23 7L19.2 8.5L18 12L16.8 8.5L13 7L16.8 5.5L18 2Z" />
             </svg>
-
             Create Assignment
           </Link>
         </div>
-
 
         {/* ── NAV ITEMS ── */}
         <nav className={styles.nav}>
@@ -74,6 +77,8 @@ export default function Sidebar() {
                 ? pathname.startsWith("/assignments")
                 : pathname === item.href;
 
+            const isAssignments = item.href === "/assignments";
+
             return (
               <Link
                 key={item.href}
@@ -82,6 +87,29 @@ export default function Sidebar() {
               >
                 <item.icon active={active} />
                 {item.label}
+
+                {/* ── Assignment count badge ── */}
+                {isAssignments && assignmentCount > 0 && (
+                  <span
+                    style={{
+                      marginLeft: "auto",
+                      minWidth: 20,
+                      height: 20,
+                      borderRadius: 100,
+                      background: "#F97316",
+                      color: "white",
+                      fontFamily: "'Bricolage Grotesque', sans-serif",
+                      fontWeight: 700,
+                      fontSize: 11,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: "0 6px",
+                    }}
+                  >
+                    {assignmentCount > 99 ? "99+" : assignmentCount}
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -89,7 +117,6 @@ export default function Sidebar() {
 
         {/* ── BOTTOM ── */}
         <div className={styles.bottom}>
-          {/* Settings */}
           <Link
             href="/settings"
             className={styles.navItem}
@@ -99,7 +126,6 @@ export default function Sidebar() {
             Settings
           </Link>
 
-          {/* School Card */}
           <div className={styles.schoolCard}>
             <div className={styles.schoolAvatar}>
               <span style={{ color: "white", fontWeight: 700, fontSize: 18 }}>D</span>
@@ -116,7 +142,7 @@ export default function Sidebar() {
   );
 }
 
-// ── Icons (Matched Exactly to Figma Specs) ───────────────────────────────────
+// ── Icons ─────────────────────────────────────────────────────────────────────
 
 function HomeIcon({ active }: { active: boolean }) {
   const color = active ? "#1A1A1A" : "#8A8A8E";
@@ -134,7 +160,6 @@ function GroupsIcon({ active }: { active: boolean }) {
   const color = active ? "#1A1A1A" : "#8A8A8E";
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* Mask to cut out the person pointing from the solid rectangle */}
       <mask id="teacher-mask">
         <rect width="24" height="24" fill="white" />
         <circle cx="7" cy="11" r="2.5" fill="black" />
@@ -170,7 +195,6 @@ function LibraryIcon({ active }: { active: boolean }) {
   const color = active ? "#1A1A1A" : "#8A8A8E";
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2">
-      {/* Draws the exact 3/4 pie-chart outline matching your image */}
       <path d="M12 2v10H2a10 10 0 1 0 10-10z" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
