@@ -41,20 +41,31 @@ export function getGenerationWorker(): Worker {
         throw error;
       }
     },
-  {
-    connection: bullMQConnection,
-    concurrency: 1,
-    stalledInterval: 120000,
-    maxStalledCount: 1,
-    drainDelay: 30,
-    lockDuration: 60000,
-    lockRenewTime: 30000,
-  }
+    {
+      connection: bullMQConnection,
+      concurrency: 1,
+      drainDelay: 300,        
+      stalledInterval: 300000,
+      maxStalledCount: 1,
+      lockDuration: 60000,
+      lockRenewTime: 30000,
+    }
   );
+
+  // Shut down worker when queue is empty to eliminate idle Redis commands
+  generationWorkerInstance.on("drained", async () => {
+    logger.info("Generation queue drained — closing worker to save Redis commands");
+    try {
+      await generationWorkerInstance?.close();
+    } finally {
+      generationWorkerInstance = null;
+    }
+  });
 
   generationWorkerInstance.on("completed", (job) =>
     logger.info(`Generation job completed: ${job.id}`)
   );
+
   generationWorkerInstance.on("failed", (job, err) =>
     logger.error(`Generation job failed: ${job?.id} — ${err.message}`)
   );

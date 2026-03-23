@@ -9,17 +9,14 @@ import { logger } from "./utils/logger";
 import { initServices } from "./config";
 import { env } from "./config/env";
 import routes from "./routes";
-import { getGenerationWorker } from "./workers/generation.worker";
-import { getPdfWorker } from "./workers/pdf.worker";
 import { Request, Response, NextFunction } from "express";
 import { ApiResponse } from "./utils/response.util";
 import { rateLimitMiddleware } from "./middlewares/rateLimit.middleware";
 import path from "path";
 
+
 const app: Application = express();
 const httpServer = createServer(app);
-getGenerationWorker();
-getPdfWorker();
 
 app.use(helmet());
 app.use(
@@ -44,9 +41,9 @@ app.use(
 
 app.use(morgan("dev"));
 app.use(rateLimitMiddleware({
-  capacity: 20,       // max 20 requests stored
-  refillRate: 10,     // refill 10 tokens
-  windowSecs: 60,     // every 60 seconds
+  capacity: 20,
+  refillRate: 10,
+  windowSecs: 60,
 }));
 
 app.use(express.json());

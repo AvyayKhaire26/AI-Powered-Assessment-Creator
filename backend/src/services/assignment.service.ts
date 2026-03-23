@@ -6,11 +6,15 @@ import { assignmentQueue } from "../config/queue";
 import { redisConnection } from "../config/redis";
 import { env } from "../config/env";
 import { logger } from "../utils/logger";
+import { getGenerationWorker } from "../workers/generation.worker";
+
 
 const CACHE_PREFIX = "assignment:";
 
+
 export class AssignmentService implements IAssignmentService {
     constructor(private readonly repository: AssignmentRepository) { }
+
 
     async createAssignment(data: CreateAssignmentDTO): Promise<IAssignment> {
         logger.info("Inside AssignmentService createAssignment()");
@@ -20,6 +24,8 @@ export class AssignmentService implements IAssignmentService {
             const job = await assignmentQueue.add("generate-assignment", {
                 assignmentId: assignment._id.toString(),
             });
+
+            getGenerationWorker();
 
             const updated = await this.repository.update(assignment._id.toString(), {
                 jobId: job.id as string,
@@ -33,6 +39,7 @@ export class AssignmentService implements IAssignmentService {
             throw error;
         }
     }
+
 
     async getAssignmentById(id: string): Promise<IAssignment | null> {
         logger.info("Inside AssignmentService getAssignmentById()");
@@ -60,6 +67,7 @@ export class AssignmentService implements IAssignmentService {
         }
     }
 
+
     async getAllAssignments(): Promise<IAssignment[]> {
         logger.info("Inside AssignmentService getAllAssignments()");
         try {
@@ -72,6 +80,7 @@ export class AssignmentService implements IAssignmentService {
         }
     }
 
+
     async deleteAssignment(id: string): Promise<void> {
         logger.info("Inside AssignmentService deleteAssignment()");
         try {
@@ -83,6 +92,7 @@ export class AssignmentService implements IAssignmentService {
             throw error;
         }
     }
+
 
     async regenerateAssignment(id: string): Promise<IAssignment> {
         logger.info("Inside AssignmentService regenerateAssignment()");
@@ -101,6 +111,9 @@ export class AssignmentService implements IAssignmentService {
                 assignmentId: id,
             });
 
+            // ✅ Spin up worker lazily — same pattern as createAssignment
+            getGenerationWorker();
+
             const updated = await this.repository.update(id, { jobId: job.id as string });
 
             logger.info("End of AssignmentService regenerateAssignment()");
@@ -111,9 +124,9 @@ export class AssignmentService implements IAssignmentService {
         }
     }
 
+
     async invalidateCache(id: string): Promise<void> {
         await redisConnection.del(`${CACHE_PREFIX}${id}`);
         logger.info(`Cache invalidated for assignment: ${id}`);
     }
-
 }
