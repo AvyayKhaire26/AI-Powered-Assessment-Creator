@@ -45,12 +45,16 @@ export class PdfService {
         const diff = DIFFICULTY_LABEL[q.difficulty] ?? q.difficulty;
 
         const optionsHtml = optionLines.length
-          ? `<div class="options">${optionLines.map((o) => `<p class="option">${o}</p>`).join("")}</div>`
+          ? `<div class="options-grid">${optionLines
+              .map((o) => `<p class="option-text">${o}</p>`)
+              .join("")}</div>`
           : "";
 
         return `
           <div class="question-block">
-            <p class="question-text">[${diff}] ${questionLine} [${q.marks} ${q.marks === 1 ? "Mark" : "Marks"}]</p>
+            <p class="question">
+              ${q.number}. [${diff}] ${questionLine} [${q.marks} ${q.marks === 1 ? "Mark" : "Marks"}]
+            </p>
             ${optionsHtml}
           </div>
         `;
@@ -59,8 +63,10 @@ export class PdfService {
       return `
         <div class="section">
           <h2 class="section-title">${section.title}</h2>
-          ${section.subtitle ? `<p class="section-subtitle">${section.subtitle}</p>` : ""}
-          ${section.instruction ? `<p class="section-instruction">${section.instruction}</p>` : ""}
+          <div class="section-header-block">
+            ${section.subtitle ? `<p class="section-subtitle">${section.subtitle}</p>` : ""}
+            ${section.instruction ? `<p class="section-instruction">${section.instruction}</p>` : ""}
+          </div>
           ${questionsHtml}
         </div>
       `;
@@ -70,10 +76,21 @@ export class PdfService {
       ? `
         <div class="answer-key">
           <h2 class="answer-key-title">Answer Key</h2>
-          ${paper.answerKey.map((item) => `
-            <div class="answer-row">
-              <b>${item.number}.</b>
-              <span>${item.answer}</span>
+          ${Object.entries(
+            paper.answerKey.reduce((map, item) => {
+              if (!map[item.sectionTitle]) map[item.sectionTitle] = [];
+              map[item.sectionTitle].push(item);
+              return map;
+            }, {} as Record<string, typeof paper.answerKey>)
+          ).map(([sectionTitle, items]) => `
+            <div class="answer-key-group">
+              <p class="answer-key-section">${sectionTitle}</p>
+              ${items.map((item) => `
+                <div class="answer-row">
+                  <b>${item.number}.</b>
+                  <span>${item.answer}</span>
+                </div>
+              `).join("")}
             </div>
           `).join("")}
         </div>
@@ -85,139 +102,235 @@ export class PdfService {
       <html>
       <head>
         <meta charset="UTF-8" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
         <style>
-          * { box-sizing: border-box; margin: 0; padding: 0; }
+          * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+          }
+
           body {
-            font-family: "Times New Roman", Times, serif;
-            font-size: 13px;
-            color: #111;
+            background: white;
+            font-family: Inter, sans-serif;
+            color: #1e1e1e;
             line-height: 1.6;
           }
-          .paper {
-            max-width: 760px;
-            margin: 0 auto;
-            padding: 24px;
+
+          .paper-container {
+            width: 100%;
+            padding: 48px 60px;
+            background: white;
           }
+
+          /* ── HEADER ── */
           .school-name {
-            text-align: center;
-            font-size: 20px;
+            font-family: Inter, sans-serif;
             font-weight: 700;
-            text-transform: uppercase;
-            margin-bottom: 4px;
-          }
-          .meta {
+            font-size: 32px;
             text-align: center;
-            font-size: 13px;
-            margin-bottom: 2px;
+            margin: 0 0 8px 0;
+            color: #1e1e1e;
           }
+
+          .subject, .class-name {
+            font-family: Inter, sans-serif;
+            font-weight: 600;
+            font-size: 24px;
+            text-align: center;
+            margin: 0;
+            color: #1e1e1e;
+          }
+
           .time-marks-row {
             display: flex;
             justify-content: space-between;
-            margin: 10px 0;
-            font-size: 13px;
+            margin: 32px 0 16px 0;
+            font-family: Inter, sans-serif;
             font-weight: 600;
+            font-size: 16px;
+            color: #1e1e1e;
           }
-          .divider {
-            border: none;
-            border-top: 1.5px solid #111;
-            margin: 10px 0;
+
+          .instruction-line {
+            font-family: Inter, sans-serif;
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 24px;
+            color: #1e1e1e;
           }
+
+          /* ── STUDENT INFO ── */
           .student-info {
+            margin-bottom: 40px;
             display: flex;
-            gap: 32px;
-            margin-bottom: 16px;
+            flex-direction: column;
+            gap: 12px;
+            width: 500px;
           }
+
           .info-line {
             display: flex;
-            align-items: center;
-            gap: 8px;
-            flex: 1;
+            align-items: flex-end;
+            justify-content: space-between;
+            font-family: Inter, sans-serif;
+            font-weight: 600;
+            font-size: 18px;
+            color: #1e1e1e;
           }
-          .info-line-bar {
-            flex: 1;
-            border-bottom: 1px solid #111;
-            height: 16px;
+
+          .info-label {
+            white-space: nowrap;
+            padding-right: 8px;
           }
-          .section {
-            margin-bottom: 20px;
-          }
-          .section-title {
-            font-size: 15px;
-            font-weight: 700;
-            text-decoration: underline;
+
+          .underline {
+            flex-grow: 1;
+            border-bottom: 1.5px solid #1e1e1e;
+            height: 0;
             margin-bottom: 4px;
           }
-          .section-subtitle {
-            font-size: 13px;
-            font-style: italic;
-            margin-bottom: 2px;
+
+          /* ── SECTIONS ── */
+          .section {
+            margin-bottom: 40px;
           }
-          .section-instruction {
-            font-size: 12px;
-            color: #444;
-            margin-bottom: 8px;
-          }
-          .question-block {
-            margin-bottom: 10px;
-          }
-          .question-text {
-            font-size: 13px;
-          }
-          .options {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2px 16px;
-            margin-top: 4px;
-            padding-left: 16px;
-          }
-          .option {
-            font-size: 13px;
-          }
-          .end-line {
+
+          .section-title {
             text-align: center;
+            font-family: Inter, sans-serif;
             font-weight: 600;
-            margin: 20px 0;
-            font-size: 13px;
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #1e1e1e;
           }
-          .answer-key {
-            border-top: 2px dashed #ccc;
-            padding-top: 16px;
-            margin-top: 24px;
+
+          .section-subtitle {
+            font-family: Inter, sans-serif;
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            color: #1e1e1e;
           }
-          .answer-key-title {
-            font-size: 16px;
-            font-weight: 700;
+
+          .section-instruction {
+            font-family: Inter, sans-serif;
+            font-size: 14px;
+            font-weight: 400;
+            color: #444;
             margin-bottom: 12px;
           }
+
+          /* ── QUESTIONS ── */
+          .question-block {
+            margin-bottom: 20px;
+          }
+
+          .question {
+            font-family: Inter, sans-serif;
+            font-weight: 400;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #1e1e1e;
+          }
+
+          .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 40px;
+            padding-left: 24px;
+            margin-top: 4px;
+          }
+
+          .option-text {
+            font-family: Inter, sans-serif;
+            font-size: 15px;
+            margin: 0;
+            color: #1e1e1e;
+          }
+
+          /* ── END LINE ── */
+          .end-line {
+            text-align: center;
+            font-family: Inter, sans-serif;
+            font-weight: 600;
+            margin-top: 40px;
+            color: #666;
+            font-size: 15px;
+          }
+
+          /* ── ANSWER KEY ── */
+          .answer-key {
+            margin-top: 40px;
+            border-top: 2px dashed #ccc;
+            padding-top: 24px;
+          }
+
+          .answer-key-title {
+            font-family: Inter, sans-serif;
+            font-weight: 700;
+            font-size: 20px;
+            margin-bottom: 16px;
+            color: #1e1e1e;
+          }
+
+          .answer-key-group {
+            margin-bottom: 16px;
+          }
+
+          .answer-key-section {
+            font-family: Inter, sans-serif;
+            font-weight: 600;
+            font-size: 15px;
+            margin-bottom: 10px;
+            color: #1e1e1e;
+          }
+
           .answer-row {
             display: flex;
             gap: 8px;
-            font-size: 12px;
-            margin-bottom: 6px;
+            margin-bottom: 10px;
+            font-family: Inter, sans-serif;
+            font-size: 14px;
+            color: #1e1e1e;
           }
         </style>
       </head>
       <body>
-        <div class="paper">
-          <p class="school-name">${paper.school ?? ""}</p>
-          <p class="meta">Subject: ${paper.subject} &nbsp;|&nbsp; Class: ${paper.className}</p>
-          ${paper.timeAllowed
-            ? `<div class="time-marks-row">
-                <span>Time Allowed: ${paper.timeAllowed}</span>
-                <span>Maximum Marks: ${paper.totalMarks}</span>
-               </div>`
-            : `<p class="meta" style="text-align:right">Maximum Marks: ${paper.totalMarks}</p>`
-          }
-          <hr class="divider" />
-          <div class="student-info">
-            <div class="info-line"><span>Name:</span><div class="info-line-bar"></div></div>
-            <div class="info-line"><span>Roll No:</span><div class="info-line-bar"></div></div>
-            <div class="info-line"><span>Class:</span><div class="info-line-bar"></div></div>
+        <div class="paper-container">
+
+          <h1 class="school-name">${paper.school ?? ""}</h1>
+          <p class="subject">Subject: ${paper.subject}</p>
+          <p class="class-name">Class: ${paper.className}</p>
+
+          <div class="time-marks-row">
+            <span>${paper.timeAllowed ? `Time Allowed: ${paper.timeAllowed}` : ""}</span>
+            <span>Maximum Marks: ${paper.totalMarks}</span>
           </div>
-          <hr class="divider" />
+
+          <p class="instruction-line">All questions are compulsory unless stated otherwise.</p>
+
+          <div class="student-info">
+            <div class="info-line">
+              <span class="info-label">Name:</span>
+              <span class="underline"></span>
+            </div>
+            <div class="info-line">
+              <span class="info-label">Roll Number:</span>
+              <span class="underline"></span>
+            </div>
+            <div class="info-line">
+              <span class="info-label">Class: ${paper.className} Section:</span>
+              <span class="underline"></span>
+            </div>
+          </div>
+
           ${sectionsHtml}
-          <p class="end-line">— End of Question Paper —</p>
+
+          <p class="end-line">End of Question Paper</p>
+
           ${answerKeyHtml}
+
         </div>
       </body>
       </html>
