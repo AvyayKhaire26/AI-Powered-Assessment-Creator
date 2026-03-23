@@ -12,12 +12,12 @@ interface AssignmentState {
   create: (data: CreateAssignmentDTO) => Promise<Assignment>;
   remove: (id: string) => Promise<void>;
   regenerate: (id: string) => Promise<void>;
-  requestPdf: (id: string) => Promise<void>;
+  requestPdf: (id: string) => void;
   setCurrent: (a: Assignment) => void;
   clearError: () => void;
 }
 
-export const useAssignmentStore = create<AssignmentState>((set, get) => ({
+export const useAssignmentStore = create<AssignmentState>((set) => ({
   assignments: [],
   current: null,
   isLoading: false,
@@ -77,17 +77,18 @@ export const useAssignmentStore = create<AssignmentState>((set, get) => ({
       set({ current: updated });
     } catch (e: any) {
       set({ error: e.message });
+      throw e; // ← rethrow so output page can show error banner
     } finally {
       set({ isLoading: false });
     }
   },
 
-  requestPdf: async (id) => {
-    try {
-      await api.assignments.requestPdf(id);
-    } catch (e: any) {
-      set({ error: e.message });
-    }
+  // Opens PDF stream directly — browser handles download natively
+  requestPdf: (id) => {
+    window.open(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/assignments/${id}/pdf`,
+      "_blank"
+    );
   },
 
   setCurrent: (a) => set({ current: a }),
