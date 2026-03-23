@@ -12,9 +12,7 @@ export function getRedisConnection(): IORedis {
     enableReadyCheck: false,
     tls: env.REDIS_TLS ? {} : undefined,
     lazyConnect: true,
-    keepAlive: 30000,
     connectTimeout: 10000,
-    retryStrategy: (times) => Math.min(times * 500, 5000),
   });
 
   instance.on("connect", () => logger.info("Redis connected"));
@@ -22,5 +20,3 @@ export function getRedisConnection(): IORedis {
 
   return instance;
 }
-
-export const redisConnection = getRedisConnection();

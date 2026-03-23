@@ -26,4 +26,3 @@ export function getAssignmentQueue(): Queue {
   return assignmentQueueInstance;
 }
 
-export const assignmentQueue = getAssignmentQueue();
